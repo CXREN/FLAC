@@ -1,0 +1,43 @@
+///|
+/// Runnable demo for the FLAC decoder: decode two embedded streams — a mono
+/// one and a mid+side stereo one — and print their stream properties and the
+/// first few decoded samples.
+///
+/// Run with: `moon run cmd/main`
+
+// A 16-sample mono FLAC file (44100 Hz, 16-bit), all samples verbatim.
+let mono : Bytes =
+  b"\x66\x4c\x61\x43\x80\x00\x00\x22\x00\x10\x00\x10\x00\x00\x00\x00\x00\x00\x0a\xc4\x40\xf0\x00\x00\x00\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xf8\x69\x08\x00\x0f\x30\x02\x00\x00\x00\x64\xff\x9c\x00\xc8\xff\x38\x01\xf4\xfe\x0c\x03\xe8\xfc\x18\x07\xd0\xf8\x30\x13\x88\xec\x78\x27\x10\xd8\xf0\x30\x39\xa0\x5e"
+
+// A 16-sample stereo FLAC file (44100 Hz, 16-bit) stored as mid+side.
+let stereo : Bytes =
+  b"\x66\x4c\x61\x43\x80\x00\x00\x22\x00\x10\x00\x10\x00\x00\x00\x00\x00\x00\x0a\xc4\x42\xf0\x00\x00\x00\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xf8\x69\xa8\x00\x0f\x78\x02\x00\x05\x00\x09\x00\x10\x00\x12\x00\x1b\x00\x1b\x00\x26\x00\x24\x00\x31\x00\x2d\x00\x3c\x00\x36\x00\x47\x00\x3f\x00\x52\x00\x48\x02\x00\x09\x00\x16\x00\x1b\x00\x2c\x00\x2d\x00\x42\x00\x3f\x00\x58\x00\x51\x00\x6e\x00\x63\x00\x84\x00\x75\x00\x9a\x00\x87\x00\xb0\x12\xd6"
+
+fn main {
+  show("mono (verbatim)", mono)
+  show("stereo (mid+side)", stereo)
+}
+
+fn show(label : String, flac : Bytes) -> Unit {
+  let pcm = try {
+    @lib.decode(flac) |> Some
+  } catch {
+    _ => None
+  }
+  match pcm {
+    None => println("\{label}: decode failed")
+    Some(p) => {
+      println("== \{label} ==")
+      println("  sample rate : \{p.sample_rate} Hz")
+      println("  channels    : \{p.channels}")
+      println("  bits        : \{p.bits_per_sample}")
+      println("  samples     : \{p.samples.length()}")
+      let n = if p.samples.length() < 8 { p.samples.length() } else { 8 }
+      let mut first = "  first 8     :"
+      for i in 0..<n {
+        first = "\{first} \{p.samples[i]}"
+      }
+      println(first)
+    }
+  }
+}

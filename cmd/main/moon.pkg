@@ -1,0 +1,5 @@
+import {
+  "CXREN/flac" @lib,
+}
+
+pkgtype(kind: "executable")

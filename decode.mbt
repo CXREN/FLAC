@@ -41,6 +41,11 @@ pub struct Pcm {
   samples : Array[Int]
 }
 
+/// Build a `Pcm` value from its decoded fields.
+pub fn Pcm::new(sample_rate : Int, channels : Int, bits_per_sample : Int, samples : Array[Int]) -> Pcm {
+  { sample_rate: sample_rate, channels: channels, bits_per_sample: bits_per_sample, samples: samples }
+}
+
 /// Decode a whole FLAC stream into interleaved PCM, stopping at the end of the
 /// audio (or at the first non-frame byte, e.g. trailing tags).
 pub fn decode(data : Bytes) -> Pcm raise DecodeError {

@@ -19,6 +19,10 @@ to WASM and runs wherever MoonBit does.
   wasted-bits handling.
 - **Stereo** — left+side, right+side and mid+side decorrelation back into
   left/right.
+- **Tags & artwork** — VORBIS_COMMENT, PICTURE, SEEKTABLE, APPLICATION and
+  PADDING blocks decoded into typed values.
+- **Output & integrity** — WAV (RIFF/WAVE) container output, and an MD5
+  implementation to check the `STREAMINFO` signature.
 
 ## Modules
 
@@ -28,12 +32,14 @@ to WASM and runs wherever MoonBit does.
 | `crc.mbt` | CRC-8 and CRC-16 (MSB-first), including the two FLAC polynomials. |
 | `error.mbt` | The `DecodeError` type raised by every parsing entry point. |
 | `streaminfo.mbt` | The 34-byte `STREAMINFO` block. |
-| `metadata.mbt` | The `fLaC` marker and metadata-block chain. |
+| `metadata.mbt` | The `fLaC` marker and typed metadata-block chain. |
 | `frame.mbt` | Frame-header parsing with CRC-8 verification. |
 | `residual.mbt` | Partitioned Rice residual decoding. |
 | `subframe.mbt` | CONSTANT / VERBATIM / FIXED / LPC subframe decoding. |
 | `decorrelate.mbt` | Stereo channel decorrelation. |
 | `decode.mbt` | Whole-frame and whole-stream decoding to interleaved PCM. |
+| `wav.mbt` | RIFF/WAVE container output from decoded PCM. |
+| `md5.mbt` | MD5 digest (RFC 1321) with hex rendering. |
 
 ## Usage
 
@@ -49,6 +55,19 @@ let pcm : @flac.Pcm = @flac.decode(flac_bytes)
 decodes one frame at a time, and the per-module entry points
 (`@flac.parse_metadata`, `@flac.BitReader::read_frame_header`, …) expose each
 stage individually.
+
+Wrap the samples in a WAV container:
+
+```moonbit
+let wav_bytes : Bytes = pcm.to_wav()
+```
+
+Or check a stream against its `STREAMINFO` signature:
+
+```moonbit
+let info = @flac.parse_streaminfo(streaminfo_bytes)
+let signature = info.md5_hex()
+```
 
 ## Demo
 

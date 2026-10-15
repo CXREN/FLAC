@@ -92,3 +92,13 @@ pub fn decode(data : Bytes) -> Pcm raise DecodeError {
     samples: trimmed,
   }
 }
+
+/// Decode a whole FLAC stream and check the result against the MD5 signature
+/// stored in its `STREAMINFO` block. The signature covers the raw interleaved
+/// samples (see `Pcm::to_data`), so a match means the decoded PCM is
+/// byte-for-byte what the encoder produced.
+pub fn verify(data : Bytes) -> Bool raise DecodeError {
+  let meta = parse_metadata(data)
+  let pcm = decode(data)
+  md5(pcm.to_data()) == Bytes::from_array(meta.info.md5)
+}

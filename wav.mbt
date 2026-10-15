@@ -25,6 +25,32 @@ fn write_tag(out : Array[Byte], pos : Int, tag : Bytes) -> Unit {
   }
 }
 
+/// Write the interleaved samples into `out` starting at byte `pos`, using the
+/// WAV conventions: 8-bit samples are unsigned (a +128 offset), wider samples
+/// are little-endian two's complement.
+fn write_payload(out : Array[Byte], pos : Int, bits_per_sample : Int, samples : Array[Int]) -> Unit {
+  let bps = bytes_per_sample(bits_per_sample)
+  for i in 0..<samples.length() {
+    let s = samples[i]
+    if bits_per_sample == 8 {
+      out.set(pos + i, ((s + 128) & 0xFF).to_byte())
+    } else {
+      for j in 0..<bps {
+        out.set(pos + i * bps + j, ((s >> (8 * j)) & 0xFF).to_byte())
+      }
+    }
+  }
+}
+
+/// The raw interleaved PCM payload, in the byte layout FLAC defines for its
+/// `STREAMINFO` MD5 signature (identical to a WAV `data` chunk).
+pub fn Pcm::to_data(self : Pcm) -> Bytes {
+  let bps = bytes_per_sample(self.bits_per_sample)
+  let out = Array::make(self.samples.length() * bps, b'\x00')
+  write_payload(out, 0, self.bits_per_sample, self.samples)
+  Bytes::from_array(out)
+}
+
 /// Encode decoded PCM as a standard PCM WAV. 16/24/32-bit samples are stored
 /// as little-endian two's complement; 8-bit samples use the WAV unsigned
 /// convention (a +128 offset).
@@ -46,15 +72,6 @@ pub fn Pcm::to_wav(self : Pcm) -> Bytes {
   write_le(out, 34, self.bits_per_sample, 2)
   write_tag(out, 36, b"data")
   write_le(out, 40, data_size, 4)
-  for i in 0..<self.samples.length() {
-    let s = self.samples[i]
-    if self.bits_per_sample == 8 {
-      out.set(44 + i, ((s + 128) & 0xFF).to_byte())
-    } else {
-      for j in 0..<bps {
-        out.set(44 + i * bps + j, ((s >> (8 * j)) & 0xFF).to_byte())
-      }
-    }
-  }
+  write_payload(out, 44, self.bits_per_sample, self.samples)
   Bytes::from_array(out)
 }

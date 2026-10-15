@@ -1,1 +1,5 @@
-// Pure MoonBit; the FLAC decoder needs nothing beyond the standard library.
+// Pure MoonBit; the FLAC decoder uses only the standard library.
+
+import {
+  "moonbitlang/core/encoding/utf8" @utf8,
+}

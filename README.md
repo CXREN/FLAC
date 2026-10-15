@@ -22,7 +22,8 @@ to WASM and runs wherever MoonBit does.
 - **Tags & artwork** — VORBIS_COMMENT, PICTURE, SEEKTABLE, APPLICATION and
   PADDING blocks decoded into typed values.
 - **Output & integrity** — WAV (RIFF/WAVE) container output, and an MD5
-  implementation to check the `STREAMINFO` signature.
+  implementation that verifies a decoded stream against its `STREAMINFO`
+  signature (`@flac.verify`).
 
 ## Modules
 
@@ -62,11 +63,11 @@ Wrap the samples in a WAV container:
 let wav_bytes : Bytes = pcm.to_wav()
 ```
 
-Or check a stream against its `STREAMINFO` signature:
+Verify a stream end-to-end against the MD5 signature stored in its
+`STREAMINFO` block:
 
 ```moonbit
-let info = @flac.parse_streaminfo(streaminfo_bytes)
-let signature = info.md5_hex()
+let ok : Bool = @flac.verify(flac_bytes)
 ```
 
 ## Demo
@@ -77,6 +78,14 @@ a mid+side stereo one) and print their properties and first samples:
 ```
 moon run cmd/main
 ```
+
+## Tests
+
+The test suite covers unit vectors for every stage (bit cursor, CRC,
+`STREAMINFO`, each metadata block type, subframes, residuals, WAV, MD5) plus
+end-to-end decoding of real FLAC files produced by the reference
+libsndfile/libFLAC encoder — decoded sample-by-sample against the encoder's
+own output and verified against the `STREAMINFO` MD5 signature.
 
 ## License
 

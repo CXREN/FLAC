@@ -42,6 +42,12 @@ to WASM and runs wherever MoonBit does.
 | `wav.mbt` | RIFF/WAVE container output from decoded PCM. |
 | `md5.mbt` | MD5 digest (RFC 1321) with hex rendering. |
 
+## Install
+
+```
+moon add CXREN/flac
+```
+
 ## Usage
 
 Decode a whole stream:

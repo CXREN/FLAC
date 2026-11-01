@@ -138,11 +138,14 @@ fn restore_fixed(order : Int, samples : Array[Int], residual : Array[Int]) -> Un
 fn restore_lpc(order : Int, shift : Int, coeffs : Array[Int], samples : Array[Int], residual : Array[Int]) -> Unit {
   let n = samples.length()
   for i in order..<n {
-    let mut sum = 0
+    // Accumulate in 64 bits: for 24/32-bit samples the coefficient × sample
+    // products exceed 32 bits, so a 32-bit sum would wrap and corrupt the
+    // prediction (matching libFLAC's own FLAC__int64 accumulator).
+    let mut sum : Int64 = 0L
     for j in 0..<order {
-      sum = sum + coeffs[j] * samples[i - 1 - j]
+      sum = sum + Int64::from_int(coeffs[j]) * Int64::from_int(samples[i - 1 - j])
     }
-    let pred = sum >> shift
+    let pred = (sum >> shift).to_int()
     samples.set(i, residual[i - order] + pred)
   }
 }
